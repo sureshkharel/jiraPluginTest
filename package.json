@@ -1,0 +1,24 @@
+{
+  "name": "playwright-cucumber-ts",
+  "version": "1.0.0",
+  "description": "Playwright + Cucumber + TypeScript E2E test framework",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:tags": "cucumber-js --tags",
+    "report": "node src/utils/generate-report.js",
+    "test:report": "npm test; npm run report"
+  },
+  "keywords": ["playwright", "cucumber", "typescript", "bdd", "e2e"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cucumber/cucumber": "^10.9.0",
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^22.5.0",
+    "cucumber-html-reporter": "^7.2.0",
+    "mkdirp": "^3.0.1",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
