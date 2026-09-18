@@ -1,3 +1,4 @@
+@KAN-3
 Feature: Book search
   As a user
   I want to search the book
