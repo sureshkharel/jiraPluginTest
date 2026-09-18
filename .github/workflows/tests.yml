@@ -38,6 +38,8 @@ jobs:
         run: npm test
         env:
           CI: true
+          TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
+          TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
 
       - name: Upload test reports
         if: ${{ !cancelled() }}
