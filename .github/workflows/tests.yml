@@ -9,6 +9,8 @@ on:
     branches:
       - master
 
+  workflow_dispatch:
+
 jobs:
   test:
     name: Run Cucumber E2E Tests

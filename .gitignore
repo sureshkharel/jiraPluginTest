@@ -3,3 +3,5 @@ dist/
 reports/
 .env
 *.log
+.testops-cli.json
+testops-setup-plan.json
