@@ -34,10 +34,25 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+        - name: Validate TestOps configuration
+        run: npx automatify testops config validate
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY: KAN
+          TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
+          TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
+
       - name: Run tests
         run: npm test
         env:
           CI: true
+
+      - name: TestOps dry run
+        if: ${{ !cancelled() }}
+        run: npx automatify testops auto --dry-run --output json --root .
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY: KAN
           TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
           TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
 
