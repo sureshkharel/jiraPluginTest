@@ -34,7 +34,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-        - name: Validate TestOps configuration
+      - name: Validate TestOps configuration
         run: npx automatify testops config validate
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
