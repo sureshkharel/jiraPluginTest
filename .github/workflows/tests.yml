@@ -10,6 +10,56 @@ on:
       - master
 
   workflow_dispatch:
+    inputs:
+      project_key:
+        description: 'Jira project key'
+        required: false
+        type: string
+
+      issue_key:
+        description: 'Jira issue key'
+        required: false
+        type: string
+
+      jira_base_url:
+        description: 'Jira base URL'
+        required: false
+        type: string
+
+      testops_environment:
+        description: 'TestOps environment'
+        required: false
+        type: string
+
+      scenario_id:
+        description: 'TestOps scenario ID'
+        required: false
+        type: string
+
+      scenario_ref:
+        description: 'TestOps scenario reference'
+        required: false
+        type: string
+
+      scenario_ordinal:
+        description: 'Scenario ordinal'
+        required: false
+        type: string
+
+      scenario_name:
+        description: 'BDD scenario name'
+        required: false
+        type: string
+
+      feature_name:
+        description: 'BDD feature name'
+        required: false
+        type: string
+
+      steps:
+        description: 'BDD scenario steps'
+        required: false
+        type: string
 
 jobs:
   test:
@@ -34,10 +84,25 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Validate TestOps configuration
+        run: npx automatify testops config validate
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY: KAN
+          TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
+          TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
+
       - name: Run tests
         run: npm test
         env:
           CI: true
+
+      - name: TestOps dry run
+        if: ${{ !cancelled() }}
+        run: npx automatify testops auto --dry-run --output json --root .
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY: KAN
           TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
           TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
 
