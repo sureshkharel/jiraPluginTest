@@ -84,27 +84,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Validate TestOps configuration
-        run: npx automatify testops config validate
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_PROJECT_KEY: KAN
-          TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
-          TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
-
-      - name: Run tests
-        run: npm test
+      - name: Run selected Cucumber scenario
+        id: cucumber
+        run: |
+          if [ -n "${{ inputs.scenario_name }}" ]; then
+            echo "Running selected scenario: ${{ inputs.scenario_name }}"
+            npx cucumber-js --name "${{ inputs.scenario_name }}"
+          else
+            echo "No scenario supplied. Running complete test suite."
+            npm test
+          fi
         env:
           CI: true
-
-      - name: TestOps dry run
-        if: ${{ !cancelled() }}
-        run: npx automatify testops auto --dry-run --output json --root .
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_PROJECT_KEY: KAN
-          TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
-          TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
 
       - name: Upload test reports
         if: ${{ !cancelled() }}
@@ -113,3 +104,33 @@ jobs:
           name: cucumber-test-results
           path: reports/
           retention-days: 14
+
+      - name: Report scenario automation status to TestOps
+        if: ${{ github.event_name == 'workflow_dispatch' && always() }}
+        env:
+          TESTOPS_FORGE_ENDPOINT: ${{ secrets.TESTOPS_FORGE_ENDPOINT }}
+          TESTOPS_FORGE_AUTH_TOKEN: ${{ secrets.TESTOPS_FORGE_AUTH_TOKEN }}
+          TESTOPS_PROJECT_KEY: ${{ inputs.project_key }}
+          TESTOPS_SCENARIO_REF: ${{ inputs.scenario_ref }}
+          TESTOPS_STATUS: ${{ job.status == 'success' && 'passed' || job.status == 'cancelled' && 'cancelled' || 'failed' }}
+        run: |
+          echo "Reporting scenario status: $TESTOPS_STATUS"
+          echo "Scenario ref: $TESTOPS_SCENARIO_REF"
+
+          curl -sS "$TESTOPS_FORGE_ENDPOINT" \
+            -H "authorization: Bearer $TESTOPS_FORGE_AUTH_TOKEN" \
+            -H "content-type: application/json" \
+            -d "{
+              \"contract\":\"updateScenarioAutomationStatus\",
+              \"payload\":{
+                \"context\":{
+                  \"projectKey\":\"$TESTOPS_PROJECT_KEY\"
+                },
+                \"scenarioRef\":\"$TESTOPS_SCENARIO_REF\",
+                \"status\":\"$TESTOPS_STATUS\",
+                \"externalRunId\":\"${GITHUB_RUN_ID}\",
+                \"externalRunUrl\":\"https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\",
+                \"responseStatus\":200,
+                \"responseSnippet\":\"GitHub Actions callback from ${GITHUB_WORKFLOW}\"
+              }
+            }"
